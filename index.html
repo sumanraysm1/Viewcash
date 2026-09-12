@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Mint</title>
+  
+  <!-- Telegram Web App SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Firebase Compatibility SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <!-- ========================================================= -->
+  <!-- ১. Monetag Telegram Ad SDK Tag (আপনার Zone ID বসান)       -->
+  <!-- Monetag Publisher Panel থেকে পাওয়া Script টি এখানে বসাবেন -->
+  <!-- ========================================================= -->
+  <<script src='//libtl.com/sdk.js' data-zone='11776086' data-sdk='show_11776086'></script>
+
+  <style>
+    :root {
+      --bg-color: #0d0f12;
+      --card-bg: #1a1d24;
+      --accent-blue: #0088cc;
+      --text-white: #ffffff;
+      --text-gray: #9a9ea7;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-white);
+      padding: 16px;
+      padding-bottom: 80px;
+      user-select: none;
+    }
+
+    /* Top User Header */
+    .profile-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .profile-avatar {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      background: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 22px;
+      color: #333;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+    .welcome-text {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    /* Main Balance Card */
+    .balance-card {
+      background: linear-gradient(135deg, #0077ff, #00bfff);
+      border-radius: 18px;
+      padding: 24px;
+      text-align: center;
+      margin-bottom: 16px;
+      box-shadow: 0 6px 20px rgba(0, 136, 204, 0.3);
+    }
+    .balance-title {
+      font-size: 14px;
+      opacity: 0.9;
+      margin-bottom: 6px;
+      letter-spacing: 0.5px;
+    }
+    .balance-amount {
+      font-size: 38px;
+      font-weight: 800;
+    }
+
+    /* 3 Column Grid Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background-color: var(--card-bg);
+      border-radius: 14px;
+      padding: 14px 6px;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+    .stat-icon {
+      font-size: 20px;
+      color: var(--accent-blue);
+      margin-bottom: 8px;
+    }
+    .stat-value {
+      font-size: 17px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    .stat-label {
+      font-size: 11px;
+      color: var(--text-gray);
+    }
+
+    /* Task Action Box */
+    .task-section {
+      background-color: var(--card-bg);
+      border-radius: 18px;
+      padding: 18px;
+      margin-bottom: 20px;
+    }
+    .task-title {
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 16px;
+    }
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      border: none;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      transition: all 0.2s ease;
+    }
+    .btn:active {
+      transform: scale(0.98);
+    }
+    .btn-primary {
+      background-color: var(--accent-blue);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(0, 136, 204, 0.4);
+    }
+    .btn-outline {
+      background-color: transparent;
+      border: 1.5px solid var(--accent-blue);
+      color: var(--accent-blue);
+    }
+
+    /* Footer Bottom Navigation */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: var(--card-bg);
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0;
+      border-top: 1px solid #2a2e39;
+      z-index: 99;
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      color: var(--text-gray);
+      text-decoration: none;
+      font-size: 11px;
+    }
+    .nav-item i {
+      font-size: 18px;
+    }
+    .nav-item.active {
+      color: var(--accent-blue);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top User Profile -->
+  <div class="profile-header">
+    <div class="profile-avatar"><i class="fa-solid fa-user"></i></div>
+    <div class="welcome-text">Welcome, <span id="username">User</span>!</div>
+  </div>
+
+  <!-- Main Balance Display -->
+  <div class="balance-card">
+    <div class="balance-title">Your Balance</div>
+    <div class="balance-amount">$<span id="balance">0.000</span></div>
+  </div>
+
+  <!-- User Statistics -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon"><i class="fa-solid fa-rectangle-ad"></i></div>
+      <div class="stat-value" id="total-ads">0</div>
+      <div class="stat-label">Ads Watched</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon"><i class="fa-solid fa-calendar-check"></i></div>
+      <div class="stat-value"><span id="today-ads">0</span> / 15</div>
+      <div class="stat-label">Today's Ads</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+      <div class="stat-value" id="referrals">0</div>
+      <div class="stat-label">Referrals</div>
+    </div>
+  </div>
+
+  <!-- Today's Task Area -->
+  <div class="task-section">
+    <div class="task-title">Today's Task</div>
+    <button class="btn btn-primary" onclick="watchMonetagAd()">
+      <i class="fa-solid fa-play"></i> Watch Ad
+    </button>
+    <button class="btn btn-outline" onclick="openTelegramChannel()">
+      <i class="fa-brands fa-telegram"></i> Join Channel
+    </button>
+  </div>
+
+  <!-- Bottom Navigation Bar -->
+  <div class="bottom-nav">
+    <a href="#" class="nav-item active"><i class="fa-solid fa-wallet"></i>Withdraw</a>
+    <a href="#" class="nav-item"><i class="fa-solid fa-clock-rotate-left"></i>History</a>
+    <a href="#" class="nav-item"><i class="fa-solid fa-user-plus"></i>Invite</a>
+    <a href="#" class="nav-item"><i class="fa-solid fa-headset"></i>Support</a>
+    <a href="#" class="nav-item"><i class="fa-solid fa-star"></i>Bonus</a>
+  </div>
+
+  <script>
+    // =========================================================
+    // ২. Firebase Configuration Setup
+    // আপনার ফায়ারবেস কনসোলের নিজস্ব ইনফরমেশন দিয়ে পরিবর্তন করুন
+    // =========================================================
+    const firebaseConfig = {
+  apiKey: "AIzaSyBrV_zdeVkuKmnsD7fcJ5HZTY4pqnq6sH0",
+  authDomain: "viewcash-47bf9.firebaseapp.com",
+  databaseURL: "https://viewcash-47bf9-default-rtdb.firebaseio.com",
+  projectId: "viewcash-47bf9",
+  storageBucket: "viewcash-47bf9.firebasestorage.app",
+  messagingSenderId: "734908675",
+  appId: "1:734908675:web:5cde27eeaf549a4f455936",
+  measurementId: "G-6ZMS5CBDS8"
+};
+
+    // Firebase Init
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.database();
+
+    // =========================================================
+    // ৩. Telegram Mini App User Init
+    // =========================================================
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.expand(); // Full screen display
+      tg.ready();
+    }
+
+    // Telegram User ID & Name Fetch
+    const tgUser = tg?.initDataUnsafe?.user || { id: "demo_user_123", first_name: "Ghulam" };
+    const userId = tgUser.id;
+    document.getElementById("username").innerText = tgUser.first_name;
+
+    // Database Reference Point
+    const userRef = db.ref('users/' + userId);
+
+    // Real-time Database Listener
+    userRef.on('value', (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        document.getElementById("balance").innerText = Number(data.balance || 0).toFixed(3);
+        document.getElementById("total-ads").innerText = data.totalAds || 0;
+        document.getElementById("today-ads").innerText = data.todayAds || 0;
+        document.getElementById("referrals").innerText = data.referrals || 0;
+      } else {
+        // Create User Entry if missing
+        userRef.set({
+          name: tgUser.first_name,
+          balance: 0.000,
+          totalAds: 0,
+          todayAds: 0,
+          referrals: 0
+        });
+      }
+    });
+
+    // =========================================================
+    // ৪. Monetag SDK Ad Trigger Function
+    // =========================================================
+    const MONETAG_ZONE_ID = "11776086"; // এখানে Monetag এর Zone ID দিন
+
+    function watchMonetagAd() {
+      // Monetag SDK Function Dynamic Name Logic (e.g., show_123456)
+      const monetagFunction = window['show_' + MONETAG_ZONE_ID];
+
+      if (typeof monetagFunction === 'function') {
+        
+        // Monetag In-App Telegram Ad Show
+        monetagFunction().then(() => {
+          // অ্যাড সম্পূর্ণ দেখা হলে ফায়ারবেসে রিওয়ার্ড আপডেট হবে
+          grantReward();
+        }).catch((error) => {
+          console.error("Ad Display Error:", error);
+          alert("এড সম্পূর্ণ দেখা হয়নি অথবা লোড নিতে ব্যর্থ হয়েছে!");
+        });
+
+      } else {
+        // টেস্ট/ডেমো মোড অথবা Script লোড হওয়ার আগেই ক্লিক করা হলে
+        alert("Monetag Ad Script এখনও লোড হচ্ছে অথবা Zone ID সঠিক নয়।");
+      }
+    }
+
+    // Firebase Reward Update Handler
+    function grantReward() {
+      userRef.once('value').then((snapshot) => {
+        const data = snapshot.val() || {};
+        let currentBalance = Number(data.balance || 0);
+        let totalAds = Number(data.totalAds || 0);
+        let todayAds = Number(data.todayAds || 0);
+
+        if (todayAds >= 15) {
+          alert("আজকের দিনের সর্বোচ্চ এড দেখার সীমা (15/15) শেষ!");
+          return;
+        }
+
+        // প্রতি এডের জন্য রিওয়ার্ড যোগ ($0.005)
+        userRef.update({
+          balance: currentBalance + 0.005,
+          totalAds: totalAds + 1,
+          todayAds: todayAds + 1
+        }).then(() => {
+          if (tg?.HapticFeedback) {
+            tg.HapticFeedback.notificationOccurred('success'); // Vibration Effect
+          }
+          alert("অভিনন্দন! এড দেখার জন্য $0.005 যুক্ত হয়েছে।");
+        });
+      });
+    }
+
+    function openTelegramChannel() {
+      const channelUrl = "https://t.me/sumnrr11";
+      if (tg && tg.openTelegramLink) {
+        tg.openTelegramLink(channelUrl);
+      } else {
+        window.open(channelUrl, '_blank');
+      }
+    }
+  </script>
+</body>
+</html>
